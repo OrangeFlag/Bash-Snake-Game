@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#TODO gameover, food, score
+#TODO gameover
 
 direction=">"
 score=0
@@ -138,7 +138,7 @@ case $direction in
 		then
 			isFood="true"
 		fi
-		declare -a zmei=( "$next_step " ${zmei[@]} )
+		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
 		zmei[$((${#zmei[*]}-1))]=""
 	;;
@@ -149,7 +149,7 @@ case $direction in
 		then
 			isFood="true"
 		fi
-		declare -a zmei=( "$next_step " ${zmei[@]} )
+		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
 		zmei[$((${#zmei[*]}-1))]=""
 	;;
@@ -161,7 +161,7 @@ case $direction in
 			isFood="true"
 		fi
 
-		declare -a zmei=( "$next_step " ${zmei[@]} )
+		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
 		zmei[$((${#zmei[*]}-1))]=""
 	;;
@@ -173,7 +173,7 @@ case $direction in
 			isFood="true"
 		fi
 
-		declare -a zmei=( "$next_step " ${zmei[@]} )
+		declare -a zmei=( "$next_step " ${zmei[@]}  $( [ $isFood == "true" ] && echo "delete" || echo "") )
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
 		zmei[$((${#zmei[*]}-1))]=""
 	;;
