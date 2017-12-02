@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#TODO gameover
-
 direction=">"
 score=0
 maxCountFood=3
@@ -79,7 +77,16 @@ apply_zmei
 
 
 
+game_over()
+{
 
+echo """   ____                       ___                 
+  / ___| __ _ _ __ ___   ___ / _ \\__   _____ _ __ 
+ | |  _ / _\` | '_ \` _ \\ / _ | | | \\ \\ / / _ | '__|
+ | |_| | (_| | | | | | |  __| |_| |\\ V |  __| |   
+  \\____|\\__,_|_| |_| |_|\\___|\\___/  \\_/ \\___|_|"""
+exit
+}
 
 
 
@@ -93,7 +100,6 @@ apply_zmei
 #********
 #********
 countFood=0
-
 
 
 while [ true ]
@@ -133,10 +139,15 @@ isFood="false"
 case $direction in 
 	">")
 		pole[${zmei[0]}]="#"
-		next_step=$(((zmei[0] + 1 - ((zmei[0]+1)/$m - zmei[0]/$m)*$m)%count ))
+		next_step=$(((zmei[0] + 1 - ((zmei[0]+1)/$m - zmei[0]/$m)*$m ) %count ))
 		if [ "${pole[$next_step]}" = "0" ]
 		then
 			isFood="true"
+		fi
+		
+		if [ "${pole[$next_step]}" = "#" ]
+		then
+			game_over
 		fi
 		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
@@ -149,6 +160,12 @@ case $direction in
 		then
 			isFood="true"
 		fi
+		
+		if [ "${pole[$next_step]}" = "#" ]
+		then
+			game_over
+		fi
+
 		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
 		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
 		zmei[$((${#zmei[*]}-1))]=""
@@ -159,6 +176,11 @@ case $direction in
 		if [ "${pole[$next_step]}" = "0" ]
 		then
 			isFood="true"
+		fi
+		
+		if [ "${pole[$next_step]}" = "#" ]
+		then
+			game_over
 		fi
 
 		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
@@ -171,6 +193,11 @@ case $direction in
 		if [ "${pole[$next_step]}" = "0" ]
 		then
 			isFood="true"
+		fi
+
+		if [ "${pole[$next_step]}" = "#" ]
+		then
+			game_over
 		fi
 
 		declare -a zmei=( "$next_step " ${zmei[@]}  $( [ $isFood == "true" ] && echo "delete" || echo "") )
