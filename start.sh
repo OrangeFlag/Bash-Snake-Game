@@ -1,22 +1,34 @@
 #!/bin/bash
 
+#TODO make debug, new game, highscore table, line parameters
+
+
+PushCommandLineParameters()
+{
+	sleep 1
+}
+
+
+
 direction=">"
 score=0
+countFood=0
+
+
+#customizable
 maxCountFood=3
 n=8
-m=8
-let "count=n*m"
-pause=$1
-if [ -z $pause ]
-then
 pause=0.4
-fi
 
-declare -a zmei=( $(($count/2)) $(($count/2-1)) $(($count/2-2))  $(($count/2-3)) $(($count/2-4)) $(($count/2-5)) )
+PushCommandLineParameters
 
-delta="1"
+count=$(($n*$n))
 
-clear_table()
+zmei=( $( [ $(($count/2)) -gt 0 ] && echo $(($count/2)) ) $( [ $(($count/2-1)) -gt 0 ] && echo $(($count/2-1)) ) $( [ $(($count/2-2)) -gt 0 ] && echo $(($count/2-2)) ) $( [ $(($count/2-3)) -gt 0 ] && echo $(($count/2-3)) ) $( [ $(($count/2-4)) -gt 0 ] && echo $(($count/2-4)) ) )
+
+
+
+ClearTable()
 {
 	for (( i=0;i<$count;i++ ))
         do
@@ -25,7 +37,7 @@ clear_table()
 }
 
 
-apply_zmei()
+ApplyZmei()
 {
 
 	for i in "${zmei[@]}"
@@ -36,9 +48,8 @@ apply_zmei()
 }
 
 
-read_keyboard()
+ReadKeyboard()
 {
-#echo !
 read -s -n 3 -t $pause key
 case $(echo $key | cat -v) in
         '^[[A')
@@ -57,9 +68,9 @@ esac
 
 }
 
-
-newFood()
+NewFood()
 {
+	let countFood=$countFood+1
 	i=$((RANDOM % $count))
 	while [ "${pole[$i]}" != "*" ]
 	do
@@ -71,13 +82,12 @@ newFood()
 
 
 
-clear_table
-apply_zmei
+ClearTable
+ApplyZmei
 
 
 
-
-game_over()
+GameOver()
 {
 
 echo """   ____                       ___                 
@@ -87,9 +97,39 @@ echo """   ____                       ___
   \\____|\\__,_|_| |_| |_|\\___|\\___/  \\_/ \\___|_|"""
 exit
 }
+Victory()
+{
+clear
+echo """__     ___      _                   
+\ \\   / (_) ___| |_ ___  _ __ _   _ 
+ \\ \\ / /| |/ __| __/ _ \\| '__| | | |
+  \\ V / | | (__| || (_) | |  | |_| |
+   \\_/  |_|\\___|\\__\\___/|_|   \\__, |
+                              |___/ 
+				    """
+exit
+}
 
+TestStep()
+{
+if [ "${pole[$next_step]}" = "0" ]
+then
+	#find food
+	if [ ${#zmei[@]} -eq $count ]
+	then
+		Victory
+	fi
 
+	let score=$score+10
+	let countFood=$countFood-1
+	zmei=( "${zmei[@]}  forDelete" )
+fi
 
+if [ "${pole[$next_step]}" = "#" ]
+then
+	GameOver
+fi
+}
 
 #********
 #********
@@ -99,7 +139,7 @@ exit
 #********
 #********
 #********
-countFood=0
+
 
 
 while [ true ]
@@ -108,8 +148,7 @@ clear
 
 if [ $countFood -lt $maxCountFood ]
 then
-	let countFood=$countFood+1
-	newFood
+	NewFood
 fi
 
 
@@ -127,91 +166,40 @@ do
 	fi
 done
 echo Score: $score
-#--------------------------------------------------print table~
+#--------------------------------------------------print table and score ~
 
 
 
-read_keyboard
-
-isFood="false"
+ReadKeyboard
 
 #--------------------------------------------------calculate zmeika
+pole[${zmei[0]}]="#"
+
 case $direction in 
 	">")
-		pole[${zmei[0]}]="#"
-		next_step=$(((zmei[0] + 1 - ((zmei[0]+1)/$m - zmei[0]/$m)*$m ) %count ))
-		if [ "${pole[$next_step]}" = "0" ]
-		then
-			isFood="true"
-		fi
-		
-		if [ "${pole[$next_step]}" = "#" ]
-		then
-			game_over
-		fi
-		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
-		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
-		zmei[$((${#zmei[*]}-1))]=""
+		next_step=$(( (zmei[0] + 1 - ( (zmei[0]+1)/$n - zmei[0]/$n)*$n ) %count ))
+		TestStep
 	;;
 	"<")
-		pole[${zmei[0]}]="#"
-		next_step=$(( (zmei[0] - 1 + (zmei[0]/$m - (zmei[0]-1)/$m)*$m ) % count))
-		if [ "${pole[$next_step]}" = "0" ]
-		then
-			isFood="true"
-		fi
-		
-		if [ "${pole[$next_step]}" = "#" ]
-		then
-			game_over
-		fi
-
-		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
-		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
-		zmei[$((${#zmei[*]}-1))]=""
+		next_step=$(( (zmei[0] - 1 + (zmei[0]/$n - (zmei[0]-1)/$n)*$n) % count ))
+		TestStep
 	;;
 	"^")
-		pole[${zmei[0]}]="#"
-		next_step=$(( (zmei[0] - $m) % count))
-		if [ "${pole[$next_step]}" = "0" ]
-		then
-			isFood="true"
-		fi
-		
-		if [ "${pole[$next_step]}" = "#" ]
-		then
-			game_over
-		fi
-
-		declare -a zmei=( "$next_step " ${zmei[@]} $( [ $isFood == "true" ] && echo "delete" || echo ""))
-		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
-		zmei[$((${#zmei[*]}-1))]=""
+		next_step=$(( (zmei[0] - $n) % count))
+		TestStep
 	;;
 	"⌄")
-		pole[${zmei[0]}]="#"
-		next_step=$(( (zmei[0] + $m) % count))
-		if [ "${pole[$next_step]}" = "0" ]
-		then
-			isFood="true"
-		fi
-
-		if [ "${pole[$next_step]}" = "#" ]
-		then
-			game_over
-		fi
-
-		declare -a zmei=( "$next_step " ${zmei[@]}  $( [ $isFood == "true" ] && echo "delete" || echo "") )
-		pole[${zmei[$((${#zmei[*]}-1))]}]="*"
-		zmei[$((${#zmei[*]}-1))]=""
+		next_step=$(( (zmei[0] + $n) % count))
+		TestStep
 	;;
 esac
 
-if [ $isFood = "true" ]
-then
-	let score=$score+10
-	let countFood=$countFood-1
-fi 
+
+declare -a zmei=( "$next_step"  ${zmei[@]} )
+pole[${zmei[$((${#zmei[@]}-1))]}]="*"
+zmei[$((${#zmei[@]}-1))]=""
+
 pole[${zmei[0]}]=$direction
-#--------------------------------------------------calculate zmeika~
+#--------------------------------------------------calculate zmeika ~
 
 done
