@@ -2,6 +2,7 @@
 
 #TODO make debug, new game, highscore table, line parameters
 
+#– | \ / 
 
 PushCommandLineParameters()
 {
@@ -9,11 +10,12 @@ PushCommandLineParameters()
 }
 
 
-
+lastDirection=">"
 direction=">"
+turn="–"
 score=0
 countFood=0
-
+nextStep=0
 
 #customizable
 maxCountFood=3
@@ -42,7 +44,7 @@ ApplyZmei()
 
 	for i in "${zmei[@]}"
 	do
-		pole[i]="#"
+		pole[i]="–"
 	done
 	pole[${zmei[0]}]=$direction
 }
@@ -112,34 +114,52 @@ exit
 
 TestStep()
 {
-if [ "${pole[$next_step]}" = "0" ]
-then
-	#find food
-	if [ ${#zmei[@]} -eq $count ]
+	if [ "${pole[$nextStep]}" = "0" ]
 	then
-		Victory
+		#find food
+		if [ ${#zmei[@]} -eq $count ]
+		then
+			Victory
+		fi
+
+		let score=$score+10
+		let countFood=$countFood-1
+	
+		zmei=( "${zmei[@]}" "forDelete" )
 	fi
-
-	let score=$score+10
-	let countFood=$countFood-1
-	zmei=( "${zmei[@]}  forDelete" )
-fi
-
-if [ "${pole[$next_step]}" = "#" ]
-then
-	GameOver
-fi
 }
 
-#********
-#********
-#********
-#********
-#>*******
-#********
-#********
-#********
+TestGameOver()
+{
+	if [[ "${pole[$nextStep]}" = '|' || "${pole[$nextStep]}" = '/' || "${pole[$nextStep]}" = "\\" || "${pole[$nextStep]}" = "–" ]]
+	then
+		GameOver
+	fi
+}
 
+
+SnakeTurn()
+{
+	if [[ $direction = '>' && $lastDirection = '⌄' ||  $direction = '⌄' && $lastDirection = '>' ||  $direction = '<' && $lastDirection = '^' ||  $direction = '^' && $lastDirection = '<' ]]
+	then
+		turn="\\"
+	fi
+	
+	if [[ $direction = '>' && $lastDirection = '^' ||  $direction = '^' && $lastDirection = '>' ||  $direction = '<' && $lastDirection = '⌄' ||  $direction = '⌄' && $lastDirection = '<' ]]
+	then
+		turn="/"
+	fi
+
+	if [[ $direction = '^' && $lastDirection = '^' ||  $direction = '⌄' && $lastDirection = '⌄' ]]
+	then
+		turn="|"
+	fi
+
+	if [[ $direction = '>' && $lastDirection = '>' ||  $direction = '<' && $lastDirection = '<' ]]
+	then
+		turn="–"
+	fi
+}
 
 
 while [ true ]
@@ -169,37 +189,53 @@ echo Score: $score
 #--------------------------------------------------print table and score ~
 
 
-
+lastDirection=$direction
 ReadKeyboard
 
 #--------------------------------------------------calculate zmeika
-pole[${zmei[0]}]="#"
+if [[ $direction = '>' && $lastDirection = '<' || $direction = '<' && $lastDirection = '>' || $direction = '^' && $lastDirection = '⌄' || $direction = '⌄' && $lastDirection = '^' ]]
+then
+	direction=$lastDirection
+fi
+
 
 case $direction in 
 	">")
-		next_step=$(( (zmei[0] + 1 - ( (zmei[0]+1)/$n - zmei[0]/$n)*$n ) %count ))
-		TestStep
+		nextStep=$(( (count + zmei[0] + 1 - ( (zmei[0]+1)/$n - zmei[0]/$n)*$n ) %count ))
 	;;
 	"<")
-		next_step=$(( (zmei[0] - 1 + (zmei[0]/$n - (zmei[0]-1)/$n)*$n) % count ))
-		TestStep
+		nextStep=$(( (count + zmei[0] - 1 + (zmei[0]/$n - (zmei[0]-1)/$n)*$n) % count ))
 	;;
 	"^")
-		next_step=$(( (zmei[0] - $n) % count))
-		TestStep
+		nextStep=$(( (count + zmei[0] - $n) % count))
 	;;
 	"⌄")
-		next_step=$(( (zmei[0] + $n) % count))
-		TestStep
+		nextStep=$(( (zmei[0] + $n) % count))
 	;;
 esac
 
+if [ $nextStep -lt 0 ] || [ $nextStep -gt $count ]
+then
+echo AAAA
+return
+fi
 
-declare -a zmei=( "$next_step"  ${zmei[@]} )
-pole[${zmei[$((${#zmei[@]}-1))]}]="*"
-zmei[$((${#zmei[@]}-1))]=""
 
-pole[${zmei[0]}]=$direction
+TestStep
+SnakeTurn
+
+pole[${zmei[0]}]=$turn #change old head
+
+if [[ "${zmei[$((${#zmei[@]}-1))]}" != 'forDelete' ]]
+then
+	pole[${zmei[$((${#zmei[@]}-1))]}]="*" #delete old tail
+fi
+
+TestGameOver
+zmei[$((${#zmei[@]}-1))]="" #delete old tail
+
+zmei=( "$nextStep"  ${zmei[@]} )
+pole[${zmei[0]}]=$direction #new head
 #--------------------------------------------------calculate zmeika ~
 
 done
