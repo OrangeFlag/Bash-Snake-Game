@@ -6,9 +6,49 @@
 
 PushCommandLineParameters()
 {
-	sleep 1
+	for ((i=0; i < 5; i++))
+	do
+		if [ -z $1 ]
+		then
+			break
+		fi
+		
+		case "$1" in
+		"-l") #level
+			SetLevel $2
+		;;
+		"-c") #countFood
+			maxCountFood=$2
+		;;
+		"-p") #pause
+			pause=$2
+		;;
+		"-n") #N
+			n=$2
+		;;
+		"-h")
+			Help
+		;;
+		*)
+			echo "Undefined parameter" $1
+			exit
+		;;
+
+		esac
+		shift 2
+	done
 }
 
+Help()
+{
+	#echo help
+	exit
+}
+SetLevel()
+{
+	#change settings
+	sleep 0
+}
 
 lastDirection=">"
 direction=">"
@@ -22,7 +62,7 @@ maxCountFood=3
 n=8
 pause=0.4
 
-PushCommandLineParameters
+PushCommandLineParameters $1 $2 $3 $4 $5 $6 $7 $8 $9
 
 count=$(($n*$n))
 
@@ -213,13 +253,6 @@ case $direction in
 		nextStep=$(( (zmei[0] + $n) % count))
 	;;
 esac
-
-if [ $nextStep -lt 0 ] || [ $nextStep -gt $count ]
-then
-echo AAAA
-return
-fi
-
 
 TestStep
 SnakeTurn
