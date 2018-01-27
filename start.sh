@@ -50,6 +50,9 @@ SetLevel()
 	sleep 0
 }
 
+Init()
+{
+newGame="false"
 lastDirection=">"
 direction=">"
 turn="–"
@@ -60,21 +63,22 @@ nextStep=0
 #customizable
 maxCountFood=3
 n=8
-pause=0.4
+pause=0.25
 
 PushCommandLineParameters $1 $2 $3 $4 $5 $6 $7 $8 $9
-
 count=$(($n*$n))
 
 zmei=( $( [ $(($count/2)) -gt 0 ] && echo $(($count/2)) ) $( [ $(($count/2-1)) -gt 0 ] && echo $(($count/2-1)) ) $( [ $(($count/2-2)) -gt 0 ] && echo $(($count/2-2)) ) $( [ $(($count/2-3)) -gt 0 ] && echo $(($count/2-3)) ) $( [ $(($count/2-4)) -gt 0 ] && echo $(($count/2-4)) ) )
+}
 
-
+Init
 
 ClearTable()
 {
 	for (( i=0;i<$count;i++ ))
         do
-        pole[i]="*"
+        	pole[i]="*"
+		color[i]="\e[0m"
         done
 }
 
@@ -85,8 +89,10 @@ ApplyZmei()
 	for i in "${zmei[@]}"
 	do
 		pole[i]="–"
+		color[i]="\e[1;32m"
 	done
 	pole[${zmei[0]}]=$direction
+	color[${zmei[0]}]="\e[1;32m"
 }
 
 
@@ -119,29 +125,45 @@ NewFood()
 		i=$((RANDOM % $count))
 	done
 	pole[$i]="0"
+	color[$i]="\e[31m"
 
 }
-
 
 
 ClearTable
 ApplyZmei
 
-
+NewGame()
+{
+	echo "New game?(Enter)"
+	read key
+	if [[ "$key" = "Y" || "$key" = "y" || "$key" = "" ]]
+	then
+		Init
+		ClearTable
+		ApplyZmei
+		newGame="true"
+	else
+		exit
+	fi
+}
 
 GameOver()
 {
-
-echo """   ____                       ___                 
+echo -ne "\e[1;41m"
+echo  """   ____                       ___                 
   / ___| __ _ _ __ ___   ___ / _ \\__   _____ _ __ 
  | |  _ / _\` | '_ \` _ \\ / _ | | | \\ \\ / / _ | '__|
  | |_| | (_| | | | | | |  __| |_| |\\ V |  __| |   
-  \\____|\\__,_|_| |_| |_|\\___|\\___/  \\_/ \\___|_|"""
-exit
+  \\____|\\__,_|_| |_| |_|\\___|\\___/  \\_/ \\___|_|   
+                                                  """
+echo -ne "\e[0m"
+NewGame
 }
 Victory()
 {
 clear
+echo -en "\e[1;42m"
 echo """__     ___      _                   
 \ \\   / (_) ___| |_ ___  _ __ _   _ 
  \\ \\ / /| |/ __| __/ _ \\| '__| | | |
@@ -149,7 +171,8 @@ echo """__     ___      _
    \\_/  |_|\\___|\\__\\___/|_|   \\__, |
                               |___/ 
 				    """
-exit
+echo -ne "\e[0m"
+NewGame
 }
 
 TestStep()
@@ -201,7 +224,6 @@ SnakeTurn()
 	fi
 }
 
-
 while [ true ]
 do
 clear
@@ -216,7 +238,9 @@ fi
 last_j=0
 for (( c=0;c<$count;c++ ))
 do
-	echo -n "${pole[$c]}"
+	echo -ne "${color[$c]}"
+	echo -ne "${pole[$c]}"
+	echo -ne "\e[0m"
 	let "j=($c+1)/$n"
 	
 	if [ $last_j -ne $j ]
@@ -225,7 +249,7 @@ do
 		last_j=$j
 	fi
 done
-echo Score: $score
+echo -e "Score: \e[1m$score\e[0m"
 #--------------------------------------------------print table and score ~
 
 
@@ -255,20 +279,36 @@ case $direction in
 esac
 
 TestStep
+if [[ "$newGame" = "true" ]]
+then
+	newGame="false"
+	continue
+fi
 SnakeTurn
 
-pole[${zmei[0]}]=$turn #change old head
+pole[${zmei[0]}]="$turn" #change old head
+
 
 if [[ "${zmei[$((${#zmei[@]}-1))]}" != 'forDelete' ]]
 then
 	pole[${zmei[$((${#zmei[@]}-1))]}]="*" #delete old tail
+	color[${zmei[$((${#zmei[@]}-1))]}]="\e[0m"
+	
 fi
 
 TestGameOver
+
+if [[ "$newGame" = "true" ]]
+then
+	newGame="false"
+	continue
+fi
+
 zmei[$((${#zmei[@]}-1))]="" #delete old tail
 
 zmei=( "$nextStep"  ${zmei[@]} )
-pole[${zmei[0]}]=$direction #new head
+pole[${zmei[0]}]="$direction" #new head
+color[${zmei[0]}]="\e[1;32m"
 #--------------------------------------------------calculate zmeika ~
 
 done
