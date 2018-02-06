@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#TODO make debug, new game, highscore table, line parameters
+#TODO refactoring, highscore table, readme, help, set level
 
 #– | \ / 
 
@@ -49,8 +49,7 @@ SetLevel()
 	#change settings
 	sleep 0
 }
-
-Init()
+NewGameInit()
 {
 newGame="false"
 lastDirection=">"
@@ -59,19 +58,22 @@ turn="–"
 score=0
 countFood=0
 nextStep=0
+zmei=( $( [ $(($count/2)) -gt 0 ] && echo $(($count/2)) ) $( [ $(($count/2-1)) -gt 0 ] && echo $(($count/2-1)) ) $( [ $(($count/2-2)) -gt 0 ] && echo $(($count/2-2)) ) $( [ $(($count/2-3)) -gt 0 ] && echo $(($count/2-3)) ) $( [ $(($count/2-4)) -gt 0 ] && echo $(($count/2-4)) ) )
+}
 
+Init()
+{
 #customizable
 maxCountFood=3
 n=8
 pause=0.25
-
 PushCommandLineParameters $1 $2 $3 $4 $5 $6 $7 $8 $9
 count=$(($n*$n))
+NewGameInit
 
-zmei=( $( [ $(($count/2)) -gt 0 ] && echo $(($count/2)) ) $( [ $(($count/2-1)) -gt 0 ] && echo $(($count/2-1)) ) $( [ $(($count/2-2)) -gt 0 ] && echo $(($count/2-2)) ) $( [ $(($count/2-3)) -gt 0 ] && echo $(($count/2-3)) ) $( [ $(($count/2-4)) -gt 0 ] && echo $(($count/2-4)) ) )
 }
 
-Init
+Init $1 $2 $3 $4 $5 $6 $7 $8 $9 
 
 ClearTable()
 {
@@ -83,7 +85,7 @@ ClearTable()
 }
 
 
-ApplyZmei()
+ApplySnake()
 {
 
 	for i in "${zmei[@]}"
@@ -131,7 +133,7 @@ NewFood()
 
 
 ClearTable
-ApplyZmei
+ApplySnake
 
 NewGame()
 {
@@ -139,7 +141,7 @@ NewGame()
 	read key
 	if [[ "$key" = "Y" || "$key" = "y" || "$key" = "" ]]
 	then
-		Init
+		NewGameInit
 		ClearTable
 		ApplyZmei
 		newGame="true"
