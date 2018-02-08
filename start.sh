@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#TODO refactoring, highscore table, set level
+#TODO refactoring, highscore table
 
 #– | \ / 
 
@@ -16,6 +16,7 @@ PushCommandLineParameters()
 		case "$1" in
 		"-l") #level
 			SetLevel $2
+			break
 		;;
 		"-c") #countFood
 			maxCountFood=$2
@@ -53,8 +54,32 @@ Help()
 
 SetLevel()
 {
-	#change settings
-	sleep 0
+	l=$1
+	if [ $l -lt 0 ]
+	then
+		l=0
+	fi
+
+	if [ $l -gt 20 ]
+	then
+		l=20
+	fi
+
+	#0..20
+	#n - 7..20
+	#c - 20%
+	#p - 0.25 - 0.1
+
+	if [ $l -lt 7 ]
+	then
+		n=7
+	else
+		n=$l
+	fi
+	
+	let "maxCountFood=n*n/20"
+	pause=0`echo "0.25-0.01*$l" | bc`
+
 }
 
 NewGameInit()
