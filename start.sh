@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#TODO refactoring, highscore table
-
 #– | \ / 
 
 PushCommandLineParameters()
@@ -99,8 +97,10 @@ Init()
 	maxCountFood=3
 	n=8
 	pause=0.25
+	declare -a highScore
 	PushCommandLineParameters $1 $2 $3 $4 $5 $6 $7 $8 $9
 	count=$(($n*$n))
+	HighScoreInit
 	NewGameInit
 }
 
@@ -166,6 +166,7 @@ ApplySnake
 
 NewGame()
 {
+	HighScoreAdd
 	echo "New game?(Enter)"
 	read key
 	if [[ "$key" = "Y" || "$key" = "y" || "$key" = "" ]]
@@ -205,6 +206,29 @@ Victory()
 				    """
 	echo -ne "\e[0m"
 	NewGame
+}
+
+HighScoreInit()
+{
+	if [ -f highscore ]
+	then
+		index=0
+		while read line; do
+		    if [ -z $line ]
+		    then
+		    	continue
+		    fi
+		    hishScore[$index]="$line"
+		    index=$(($index+1))
+		done < highscore
+	fi
+}
+
+HighScoreAdd()
+{
+	echo -n "Enter your name: "
+	read name
+	##TODO make this
 }
 
 TestStep()
